@@ -10,6 +10,7 @@
   <a href="https://www.npmjs.com/package/dsh-qa-mode"><img src="https://img.shields.io/npm/v/dsh-qa-mode?style=flat-square" alt="npm"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-378ADD?style=flat-square" alt="license"></a>
   <a href="https://github.com/Congxiang1994/dsh-qa-mode/actions/workflows/checks.yml"><img src="https://img.shields.io/github/actions/workflow/status/Congxiang1994/dsh-qa-mode/checks.yml?style=flat-square" alt="checks"></a>
+  <a href="https://github.com/Congxiang1994/dsh-qa-mode"><img src="https://img.shields.io/github/stars/Congxiang1994/dsh-qa-mode?style=flat-square&color=FBBD16" alt="stars"></a>
 </p>
 
 <p align="center">
@@ -54,6 +55,12 @@ Open a **new** session and pick 「问答模式」 in the mode picker.
 | One-command release, the five indexes, syncing this machine afterwards | [Releasing](docs/release.en.md) |
 | Validation, behavioural checks, development commands | [Development](docs/development.en.md) |
 | Directory tree and what each file does | [Repository layout](docs/repository.en.md) |
+
+## ⭐ Find it useful? Give it a star
+
+If this plugin saved you context and a few search rounds, drop a star on the **[GitHub repo](https://github.com/Congxiang1994/dsh-qa-mode)** — it helps more DSH users discover the project and keeps me motivated to maintain it.
+
+[Star on GitHub ⭐](https://github.com/Congxiang1994/dsh-qa-mode)
 
 ## License
 

@@ -10,6 +10,7 @@
   <a href="https://www.npmjs.com/package/dsh-qa-mode"><img src="https://img.shields.io/npm/v/dsh-qa-mode?style=flat-square" alt="npm"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-378ADD?style=flat-square" alt="license"></a>
   <a href="https://github.com/Congxiang1994/dsh-qa-mode/actions/workflows/checks.yml"><img src="https://img.shields.io/github/actions/workflow/status/Congxiang1994/dsh-qa-mode/checks.yml?style=flat-square" alt="checks"></a>
+  <a href="https://github.com/Congxiang1994/dsh-qa-mode"><img src="https://img.shields.io/github/stars/Congxiang1994/dsh-qa-mode?style=flat-square&color=FBBD16" alt="stars"></a>
 </p>
 
 <p align="center">
@@ -54,6 +55,12 @@ dsh plugin --profile <你的 profile> add dsh-qa-mode
 | 一条命令发版、五个索引源、发完怎么同步本机 | [发布方式](docs/release.md) |
 | 校验与行为验证、开发命令 | [开发方式](docs/development.md) |
 | 目录树与各文件职责 | [代码仓架构](docs/repository.md) |
+
+## ⭐ 觉得有用？点个 Star
+
+如果这个插件帮你省了上下文、少等了几轮检索，去 **[GitHub 仓库](https://github.com/Congxiang1994/dsh-qa-mode)** 点个 Star 吧——一颗星能让更多 DSH 用户发现它，也让我更有动力继续维护。
+
+[Star on GitHub ⭐](https://github.com/Congxiang1994/dsh-qa-mode)
 
 ## 许可证
 
