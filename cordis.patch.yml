@@ -27,7 +27,12 @@
         id: qa
         name: 问答模式
         description: 联网检索问答：只用搜索、抓取和只读文件工具，结论先行、少工具少轮次。
-        order: 5
+        # Roster position. The shipped presets take order 1 (Standard), 2 (PTC),
+        # 3 (Minimal) and 4 (Creator), and the registry sorts by order ascending
+        # with the id as tie-break — the client renders that order unchanged. A
+        # fractional value puts Q&A between Standard and PTC without renumbering
+        # any shipped preset, which this bundle cannot do anyway.
+        order: 1.5
         plugins:
           # `complete: true` makes this prefix the whole system prompt. Without
           # it the agent inherits ~2.6 KB of coding-agent guidance it can never

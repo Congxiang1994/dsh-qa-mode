@@ -21,7 +21,12 @@
 ## What it is
 
 DSH ships four modes in its picker: Standard, PTC, Minimal and Creator. Install this
-plugin and a fifth appears — **Q&A mode** (「问答模式」).
+plugin and a fifth appears — **Q&A mode** (「问答模式」) — placed **between Standard and
+PTC** rather than at the bottom of the list.
+
+Position comes from the preset's `order`, sorted ascending: the shipped four take
+`1 / 2 / 3 / 4`, and this plugin uses `1.5` to slot in second. That avoids renumbering a
+shipped preset, which this bundle could not do anyway.
 
 Its scope is deliberately narrow: **you just want a question answered**, and you don't
 need code edits, commands or subagents. So the mode:

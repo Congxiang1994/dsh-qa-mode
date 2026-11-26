@@ -62,6 +62,14 @@ if (typeof patchPath === 'string') {
     check(typeof config?.description === 'string' && config.description.length > 0, 'preset needs a description')
     check(Number.isFinite(config?.order), 'preset needs a numeric order')
 
+    // Roster position is a product decision, not an implementation detail: the
+    // registry sorts by order ascending and the client renders that order as-is,
+    // so this number alone decides where the mode appears in the picker. Pin it
+    // between Standard (1) and PTC (2); a plain 5 puts it at the bottom, which is
+    // where it used to sit.
+    check(config?.order > 1 && config?.order < 2,
+      `preset order must sit between Standard (1) and PTC (2) (got ${JSON.stringify(config?.order)})`)
+
     const plugins = config?.plugins
     check(Array.isArray(plugins) && plugins.length > 0, 'preset must declare a non-empty plugins list')
     for (const [index, plugin] of (Array.isArray(plugins) ? plugins : []).entries()) {
