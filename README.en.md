@@ -31,8 +31,24 @@ need code edits, commands or subagents. So the mode:
   fetch, inline citations
 - leaves out the shell, file writes, subagents, workflows and skills
 
-The toolset drops from **44 tools in Standard mode to 17**, which shortens every request
-and removes much of the "which tool is this?" hesitation.
+The toolset is far smaller than Standard mode's, which shortens every request and
+removes much of the "which tool is this?" hesitation. The exact count depends on what
+your profile mounts; measured on a local install:
+
+| Scenario | Tools |
+|---|---|
+| Standard mode | 44 |
+| Q&A mode with `dsh-free-search` installed | 17 |
+| Q&A mode without `dsh-free-search` | 8 |
+
+The composition of those 17 is worth knowing: this plugin declares only 4 (`read`,
+`read_image`, `web_search`, `web_fetch`); 9 come from `dsh-free-search` registering host
+tools (`research`, `advanced_search` and others), and 4 from the host (`working_directory`,
+`sidebar_open` and others). **The plugin itself contributes 4 tools**; the rest follows
+your environment.
+
+Without `dsh-free-search` the measured set is 8: the same 4, plus the host's
+`create_worktree`, `load_workspace_dependencies`, `sidebar_open` and `working_directory`.
 
 ## Install
 

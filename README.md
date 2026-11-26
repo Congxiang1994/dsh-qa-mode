@@ -28,7 +28,17 @@ DSH 的模式下拉默认有四个：标准、PTC、极简、创造。装上这�
 - 系统提示词换成问答专用：结论先行、最多一轮检索加一次抓取、内联引用
 - 不挂终端、不挂写文件、不挂子代理、不挂工作流、不挂技能
 
-工具从标准模式的 **44 个降到 17 个**，请求更短，也少了很多“该用哪个工具”的犹豫。
+工具数量比标准模式少得多，请求更短，也少了很多“该用哪个工具”的犹豫。具体数字取决于你的 profile 装了哪些插件，本机实测：
+
+| 场景 | 工具数 |
+|---|---|
+| 标准模式 | 44 |
+| 问答模式（装了 dsh-free-search） | 17 |
+| 问答模式（未装 dsh-free-search） | 8 |
+
+这 17 个的构成也值得一提：本插件只声明 4 个（`read`、`read_image`、`web_search`、`web_fetch`）；其余 9 个是 dsh-free-search 注册到 Host 层的工具（`research`、`advanced_search` 等），4 个来自宿主（`working_directory`、`sidebar_open` 等）。也就是说**本插件自己只贡献 4 个工具**，其余取决于环境。
+
+未装 dsh-free-search 时实测为 8 个：`read`、`read_image`、`web_search`、`web_fetch`，加上宿主的 `create_worktree`、`load_workspace_dependencies`、`sidebar_open`、`working_directory`。
 
 ## 安装
 
