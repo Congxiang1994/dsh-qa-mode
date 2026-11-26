@@ -91,6 +91,44 @@ check(statSync(icon, { throwIfNoEntry: false })?.isFile() === true, 'icon.svg mu
 check(statSync(icon, { throwIfNoEntry: false })?.size < 256 * 1024, 'icon.svg must stay under 256 KiB')
 check(readFileSync(icon, 'utf8').includes('<svg'), 'icon.svg must be an SVG document')
 
+/* Both READMEs must exist and cross-link each other, and the Chinese one must
+   quote the persona prompt exactly as the patch ships it. A drifting quote or a
+   one-sided language link is otherwise invisible until a reader notices. The
+   English README carries a translation of that prompt, so it is checked for a
+   fenced quote but not for byte equality with the Chinese source. */
+const readmes = {
+  'README.md': { other: 'README.en.md', quotesSource: true },
+  'README.en.md': { other: 'README.md', quotesSource: false },
+}
+for (const [file, expected] of Object.entries(readmes)) {
+  const path = join(root, file)
+  check(statSync(path, { throwIfNoEntry: false })?.isFile() === true, `${file} must exist`)
+  if (statSync(path, { throwIfNoEntry: false })?.isFile() !== true) continue
+  const text = readFileSync(path, 'utf8')
+  check(
+    text.includes(`href="${expected.other}"`) || text.includes(`](${expected.other})`),
+    `${file} must link to ${expected.other}`,
+  )
+  check(text.length > 1500, `${file} looks too short to document the plugin`)
+}
+
+const personaSource = readFileSync(join(root, 'cordis.patch.yml'), 'utf8')
+const personaMatch = personaSource.match(/prefix: \|\n((?: {16}.*\n| *\n)+)/)
+check(personaMatch !== null, 'cordis.patch.yml must declare the persona prompt as a block scalar')
+if (personaMatch !== null) {
+  const normalize = value => value.split('\n').map(line => line.trim()).filter(Boolean).join('\n')
+  const expected = normalize(personaMatch[1].replace(/^ {16}/gm, ''))
+  for (const [file, { quotesSource }] of Object.entries(readmes)) {
+    const fenced = [...readFileSync(join(root, file), 'utf8').matchAll(/```[a-z]*\n([\s\S]*?)```/g)]
+      .map(match => match[1])
+      .find(block => block.includes('问答助手') || block.includes('Answer first'))
+    check(fenced !== undefined, `${file} must quote the persona prompt in a fenced block`)
+    if (fenced !== undefined && quotesSource) {
+      check(normalize(fenced) === expected, `${file} quotes a persona prompt that differs from cordis.patch.yml`)
+    }
+  }
+}
+
 if (failures.length > 0) {
   console.error(`dsh-qa-mode: ${failures.length} check(s) failed`)
   for (const failure of failures) console.error(`  - ${failure}`)
