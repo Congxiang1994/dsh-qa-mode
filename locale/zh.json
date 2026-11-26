@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "dsh-qa-mode",
+    "description": "新增一个「问答模式」Agent 预设：用 web_search 和 web_fetch 回答问题，不挂编码工具链——没有终端、没有写文件、没有子代理、没有工作流和技能。检索走宿主 profile 当前选择的搜索服务：装了 dsh-free-search 就用它的免 key 引擎，否则用 DSH 自带的 DeepSeek 搜索（需要 DeepSeek 账号或 API Key）。需要改文件请切到标准模式。"
+  }
+}

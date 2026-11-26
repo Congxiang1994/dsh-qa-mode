@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "dsh-qa-mode",
+    "description": "Adds a 「问答模式」 agent preset that answers with web_search and web_fetch instead of a coding toolchain: no shell, no file writes, no subagents, no workflows, no skills. Search uses whichever provider the host profile composes — dsh-free-search if installed, otherwise the DSH DeepSeek search providers, which need a DeepSeek account or API key. Pick Standard mode to change files."
+  }
+}

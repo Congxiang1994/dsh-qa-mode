@@ -1,0 +1,42 @@
+{
+  "name": "dsh-qa-mode",
+  "version": "1.0.0",
+  "description": "Q&A agent preset for DeepSeek Harness: answers with web search and page fetches instead of a coding toolchain.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "agent-preset",
+    "qa",
+    "web-search"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Congxiang1994/dsh-qa-mode.git"
+  },
+  "homepage": "https://github.com/Congxiang1994/dsh-qa-mode#readme",
+  "bugs": {
+    "url": "https://github.com/Congxiang1994/dsh-qa-mode/issues"
+  },
+  "exports": {
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "dsh": ">=0.2.2-rc.3 <0.4.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
