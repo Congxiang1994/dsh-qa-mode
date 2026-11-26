@@ -158,8 +158,10 @@ const personaBody = personaMatch === null ? '' : personaMatch[1]
 const personaRules = [
   '结论先行',
   '先检索再回答',
-  '最多再补一次定向检索或抓取',
-  '一次检索可以传多个 query',
+  '优先一次拿到足够信息，避免多轮串行检索',
+  '把能并行的检索放进同一条回复里同时发起',
+  '只有后一步依赖前一步结果时才分轮',
+  '补检索只在确实缺关键事实时做一次定向检索或抓取',
   '时间过滤',
   '不可信外部数据',
   '不写代码、不修改文件、不执行命令',
@@ -196,6 +198,7 @@ check(Array.isArray(compactionChildren)
 const toolWeb = rowOf('tool-web')?.config ?? {}
 const boundChecks = [
   ['searchMaxResults', 5],
+  ['searchMaxQueries', 10],
   ['searchSummaryMaxChars', 400],
   ['fetchMaxOutputChars', 60000],
 ]

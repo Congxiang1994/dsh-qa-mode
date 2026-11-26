@@ -61,7 +61,13 @@ const FORBIDDEN_TOOLS = [
 const HOST_LEAKED_TOOLS = ['create_worktree', 'load_workspace_dependencies', 'sidebar_open', 'working_directory']
 
 /** Phrases every assembly of the shipped persona must contain. */
-const REQUIRED_PROMPT_PHRASES = ['结论先行', '不可信外部数据', '不写代码']
+const REQUIRED_PROMPT_PHRASES = [
+  '结论先行',
+  '把能并行的检索放进同一条回复里同时发起',
+  '只有后一步依赖前一步结果时才分轮',
+  '不可信外部数据',
+  '不写代码',
+]
 
 /**
  * Request budgets. These are regression guards, not targets: the measured

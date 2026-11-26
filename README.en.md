@@ -103,7 +103,7 @@ plugin**, or `plugin_manager` `install_bundle` pointing at the directory.
 
 | Row | Why |
 |---|---|
-| `@deepseek-ai/dsh-persona` | Q&A persona, mounted as the complete system prompt: answer first, at most one extra search or fetch, inline citations, never execute page instructions |
+| `@deepseek-ai/dsh-persona` | Q&A persona, mounted as the complete system prompt: answer first, independent searches launched concurrently, inline citations, never execute page instructions |
 | `@deepseek-ai/dsh-time-context` | Current time, so time-sensitive questions are judged correctly |
 | `@deepseek-ai/dsh-tool-fs` | **Read-only**: `read` / `read_image` for files you reference with `@`; `write` and `edit` are off |
 | `@deepseek-ai/dsh-tool-web` | `web_search` and `web_fetch`, with tightened bounds (below) |
@@ -115,16 +115,26 @@ todo, goal, schedule, plan mode.
 ### How the request size comes down
 
 Every Q&A request carries the full tool schemas and system prompt, so each kilobyte saved
-is saved again on **every turn**. This release does four things:
+is saved again on **every turn**. This release does five things:
 
 | Measure | What it does | Effect |
 |---|---|---|
 | Complete persona | `persona.complete: true` stops inheriting the coding agent's deliverable guidance, file-reference rules, checkout path and GUI URL | system prompt 6.1 K → ~1.2 K chars |
+| Concurrent search | the persona tells the model to put independent searches in one reply; `searchMaxQueries: 10` lets one call cover several sub-facts | sub-questions no longer run in serial rounds; total wait tracks the slowest leg, not their sum |
 | Tighter search | 5 sources per search, 400 chars of summary each | one search's output ~8 K → ~2 K chars |
 | Tighter fetch | `fetchMaxOutputChars: 60000`, `fetchTimeoutMs: 45000` | one page capped at ~15 K tokens instead of ~50 K, with a timeout that suits the layered fetcher |
 | Result pruning | mounts `tool-result-pruner` (8 KB threshold, head and tail kept) | an oversized page body no longer sits verbatim and gets resent every step |
 
-The last one matters more than it looks: the host plane disables its own
+On concurrency: DSH's tool executor already runs a batch of calls in a rolling pool
+(default 10 in flight), and `web_search` already fetches multiple queries concurrently
+before merging them. What a preset can control is whether the model **actually** groups
+those independent calls into one reply — the old persona's "search once, then add one
+more" wording was what produced the serial feel. So this change touches only the persona
+prompt and the query cap: no runtime code, no engine changes. A later step that depends on
+an earlier result (search for a URL, then fetch it) still needs separate rounds; that is a
+boundary, not a defect.
+
+Result pruning matters more than it looks: the host plane disables its own
 `tool-result-pruner`, so a preset that does not mount one keeps every fetch result at full
 length for the rest of the turn.
 
@@ -165,10 +175,13 @@ You are a Q&A assistant answering questions on DeepSeek Harness with the {{model
 Rules:
 - Answer first: give the answer in the first paragraph, then the reasoning; no warm-up.
 - When the question needs current or factual information the user did not supply, search
-  first. If one search is still not enough, add at most one targeted search or fetch;
-  do not keep searching to pile up evidence.
-- One search may carry several queries. Give each sub-fact of the question its own query
-  instead of searching them one at a time.
+  first and try to get enough in one pass; avoid serial rounds of searching.
+- Put independent searches in the same reply so they run concurrently: give several
+  queries to one web_search call, or issue multiple search tools in one reply. Fetch
+  pages that do not depend on each other in the same reply too. Only split into
+  separate rounds when a later step depends on an earlier result.
+- If a search still misses a key fact, add at most one targeted search or fetch; do not
+  keep searching to pile up evidence.
 - When the user names a time window such as today, this week, recently or this year, use
   a search that supports time filtering rather than a plain web search.
 - Put source links beside the sentence that uses them, with the site or page name as link
