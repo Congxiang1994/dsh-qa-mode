@@ -277,14 +277,16 @@ shell may present a read-only `~/.npm`, which makes npm fail before it reaches t
 
 | Source | How | State |
 |---|---|---|
-| [npm](https://www.npmjs.com/package/dsh-qa-mode) | `release.sh` | primary channel; `latest` is the shipped version |
-| [npmmirror](https://registry.npmmirror.com/dsh-qa-mode) | `release.sh` syncs it | China mirror |
-| [dsh.so](https://www.dsh.so/) market | submitted once; its index rebuilds from npm | entry submitted |
-| [dshopen.org](https://dshopen.org/) open market | filed once for listing; then follows npm | awaiting maintainer merge |
-| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | one PR per entry; follows the repo once merged | PR #18920 open |
+| [npm](https://www.npmjs.com/package/dsh-qa-mode) | `release.sh` | primary channel; `dist-tags.latest` is the shipped version |
+| [npmmirror](https://registry.npmmirror.com/dsh-qa-mode) | `PUT /-/package/<pkg>/syncs`, then poll | China mirror; it catches up on its own |
+| [dsh.so](https://www.dsh.so/) | its index rebuilds from npm | nothing to submit; collection is delayed |
+| [dshopen.org](https://dshopen.org/) | issue [polang233/dsh-plugin-index#804](https://github.com/polang233/dsh-plugin-index/issues/804) | awaiting maintainer review |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | PR [#18920](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/18920) | awaiting maintainer merge |
 
-Both indexes need registering only once: entries point at the npm package and the repository,
-so later releases are picked up by their own collection jobs.
+Both indexes rebuild from npm on their own collection jobs, so one registration is enough and
+a later release needs no resubmission. `www.dsh.so/api/submit` does not accept outside
+submissions — it validates against the indexer's internal schema, so do not try to satisfy its
+field errors.
 
 ## Known limitations
 

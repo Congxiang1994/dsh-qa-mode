@@ -218,13 +218,13 @@ node scripts/verify-session.mjs --self-test
 
 | 源 | 方式 | 状态 |
 |---|---|---|
-| [npm](https://www.npmjs.com/package/dsh-qa-mode) | `release.sh` 自动 | 主渠道，`latest` 即最新版 |
-| [npmmirror](https://registry.npmmirror.com/dsh-qa-mode) | `release.sh` 自动同步 | 国内镜像 |
-| [dsh.so](https://www.dsh.so/) 插件市场 | 首次已提交；索引按 npm 自动重建 | 已提交条目 |
-| [开放插件市场 dshopen.org](https://dshopen.org/) | 首次已挂 issue 收录；之后跟随 npm | 待维护者合并 |
-| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 每个新条目一个 PR；已合入后跟随仓库 | 已提 PR #18920 |
+| [npm](https://www.npmjs.com/package/dsh-qa-mode) | `release.sh` 自动 | 主渠道，`dist-tags.latest` 即最新版 |
+| [npmmirror](https://registry.npmmirror.com/dsh-qa-mode) | 请求 `PUT /-/package/<pkg>/syncs` 后轮询 | 国内镜像，需等它自己追平 |
+| [dsh.so](https://www.dsh.so/) | 索引按 npm 自动重建 | 无需手动提交，抓取有延迟 |
+| [dshopen.org](https://dshopen.org/) | issue [polang233/dsh-plugin-index#804](https://github.com/polang233/dsh-plugin-index/issues/804) | 待维护者审核 |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | PR [#18920](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/18920) | 待维护者合并 |
 
-两个索引源都只登记一次：条目指到 npm 包名 / 仓库，之后每次发版由它们自己的采集任务重建，不需要重新提交。
+索引都由各自的采集任务按 npm 重建，登记一次即可，之后每次发版不必重新提交。`www.dsh.so/api/submit` 的入口不接受外部提交（它要的是索引器内部完整 schema），不要照它的报错去凑字段。
 
 ## 已知边界
 
