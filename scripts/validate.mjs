@@ -38,9 +38,13 @@ const dshRange = pkg.engines?.dsh
 check(typeof dshRange === 'string' && semver.validRange(dshRange) !== null,
   `engines.dsh must be a SemVer range (got ${JSON.stringify(dshRange)})`)
 
-if (typeof patchPath === 'string') {
-  const document = parse(readFileSync(join(root, patchPath), 'utf8'))
+/* Parsed once, used by the structural checks inside the block below and by the
+   composition checks after it. */
+const document = typeof patchPath === 'string'
+  ? parse(readFileSync(join(root, patchPath), 'utf8'))
+  : []
 
+if (typeof patchPath === 'string') {
   check(Array.isArray(document) && document.length > 0, `${patchPath} must be a non-empty YAML array`)
 
   const inserts = (Array.isArray(document) ? document : []).flatMap(entry => entry?.insert ?? [])
@@ -65,6 +69,11 @@ if (typeof patchPath === 'string') {
         `plugins[${index}] needs a package name`)
       check(plugin?.disabled !== false,
         `plugins[${index}] should not be hard-disabled in every environment`)
+      // `disabled: true` is the other way to write "never active". A `!!js`
+      // expression is a string here and is deliberately allowed: it is a
+      // platform gate, not a permanent off switch.
+      check(plugin?.disabled !== true,
+        `plugins[${index}] must not be permanently disabled in the declaration`)
       const grouped = plugin?.group === true
       if (grouped) {
         check(Array.isArray(plugin?.config) && plugin.config.length > 0,
@@ -128,6 +137,71 @@ if (personaMatch !== null) {
     }
   }
 }
+
+/* The persona is the complete system prompt, so any rule missing from it is
+   missing from the request. Pin the rules that make the preset what it is:
+   losing one silently weakens the mode rather than breaking it.
+
+   These are matched against the extracted persona block, not the whole patch
+   file: the preset's own `description` repeats phrases like 结论先行, so a
+   whole-file search would let a rule vanish from the prompt while the check
+   stayed green. */
+const personaBody = personaMatch === null ? '' : personaMatch[1]
+const personaRules = [
+  '结论先行',
+  '先检索再回答',
+  '最多再补一次定向检索或抓取',
+  '一次检索可以传多个 query',
+  '时间过滤',
+  '不可信外部数据',
+  '不写代码、不修改文件、不执行命令',
+  '不要自行更改引擎配置',
+]
+for (const rule of personaRules) {
+  check(personaBody.includes(rule), `the persona prompt must keep the rule containing ${JSON.stringify(rule)}`)
+}
+
+/* The remaining checks read the parsed declaration rather than the file text:
+   a number quoted in a comment, or a plugin name mentioned in prose, must not
+   satisfy a check about what the composition actually mounts. */
+const presetConfig = (Array.isArray(document) ? document : [])
+  .flatMap(entry => entry?.insert ?? [])
+  .find(row => row?.name === '@deepseek-ai/dsh-agent-preset')?.config
+const presetPlugins = Array.isArray(presetConfig?.plugins) ? presetConfig.plugins : []
+const rowOf = id => presetPlugins.find(plugin => plugin?.id === id)
+
+/* `complete: true` is what removes ~2.6 KB of coding-agent guidance from every
+   request. Dropping it silently restores that cost, and the persona's restated
+   rules would then sit beside the originals instead of replacing them. */
+check(rowOf('persona')?.config?.complete === true,
+  'the persona row must set complete: true (it is what bounds the system prompt)')
+
+/* The pruner only helps when the preset mounts it: the host plane disables its
+   own row, so an absent child means fetched pages stay verbatim for the turn. */
+const compactionChildren = rowOf('compaction')?.config
+check(Array.isArray(compactionChildren)
+  && compactionChildren.some(child => child?.name === '@deepseek-ai/dsh-compaction-tool-result-pruner'),
+  'the compaction group must mount @deepseek-ai/dsh-compaction-tool-result-pruner')
+
+/* Bounds the preset is tuned around. They are config, so a typo or a later edit
+   would quietly undo the tuning this release is about. */
+const toolWeb = rowOf('tool-web')?.config ?? {}
+const boundChecks = [
+  ['searchMaxResults', 5],
+  ['searchSummaryMaxChars', 400],
+  ['fetchMaxOutputChars', 60000],
+]
+for (const [field, expected] of boundChecks) {
+  check(toolWeb[field] === expected, `tool-web.${field} must stay at ${expected} (got ${JSON.stringify(toolWeb[field])})`)
+}
+
+/* The behavioural verifier is part of the release: it is what proves the
+   declaration produced the composition. A missing script would let `npm run
+   verify` fail only after publishing. */
+const verifyScript = join(root, 'scripts/verify-session.mjs')
+check(statSync(verifyScript, { throwIfNoEntry: false })?.isFile() === true, 'scripts/verify-session.mjs must exist')
+check(pkg.scripts?.verify === 'node scripts/verify-session.mjs',
+  'package.json scripts.verify must run scripts/verify-session.mjs')
 
 if (failures.length > 0) {
   console.error(`dsh-qa-mode: ${failures.length} check(s) failed`)

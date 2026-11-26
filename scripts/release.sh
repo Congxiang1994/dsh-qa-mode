@@ -25,8 +25,16 @@ pkg="dsh-qa-mode"
 fail() { echo "release: $1" >&2; exit 1; }
 
 [ -r "${token_file}" ] || fail "missing ${token_file}"
-token=$(cat "${token_file}")
-[ -n "${token}" ] || fail "${token_file} is empty"
+
+# The token reaches npm through a throwaway user config (mode 600) rather than
+# `--//registry.npmjs.org/:_authToken=…`, which would put it in argv for anyone
+# running `ps` to read, and in shell history along with the command. The file is
+# written only for the publish and removed by the trap on every exit path.
+npmrc_tmp=$(mktemp "${TMPDIR:-/tmp}/dsh-qa-mode-npmrc.XXXXXX") || fail "could not create a temporary npmrc"
+chmod 600 "${npmrc_tmp}"
+cleanup() { rm -f "${npmrc_tmp}"; }
+trap cleanup EXIT HUP INT TERM
+printf '//registry.npmjs.org/:_authToken=%s\n' "$(cat "${token_file}")" > "${npmrc_tmp}"
 
 # npm here is only ever run with this flag set; --logs-dir keeps debug logs out
 # of the read-only home too.
@@ -54,6 +62,11 @@ echo "release: ${pkg} ${current} -> ${next}"
 # --- 1. validate -----------------------------------------------------------
 npm_run run check || fail "bundle validation failed"
 
+# The verifier's self-test runs on every release: it needs no session of its own
+# and proves the behavioural assertions still reject a broken composition before
+# that composition is published.
+node scripts/verify-session.mjs --self-test || fail "the behavioural verifier's self-test failed"
+
 # --- 2. commit + tag + push ------------------------------------------------
 git add -A
 git commit -m "chore(release): ${pkg} v${next}"
@@ -62,8 +75,8 @@ git push origin HEAD --follow-tags
 
 # --- 3. publish ------------------------------------------------------------
 npm_run publish \
+  --userconfig="${npmrc_tmp}" \
   --registry="${registry}" \
-  "--//registry.npmjs.org/:_authToken=${token}" \
   --access public
 
 # --- 4. prove it is live ---------------------------------------------------
