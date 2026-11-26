@@ -288,6 +288,25 @@ a later release needs no resubmission. `www.dsh.so/api/submit` does not accept o
 submissions — it validates against the indexer's internal schema, so do not try to satisfy its
 field errors.
 
+### A release still leaves this machine on the old version
+
+Publishing does not update the copy this machine runs: the profile keeps whatever version it
+installed, so a green release can still leave the app composing the previous preset. After any
+change that affects behaviour, replace the local install too:
+
+```
+plugin_manager  remove_bundle   target: dsh-qa-mode
+plugin_manager  install_bundle  target: dsh-qa-mode@<version>
+```
+
+The version is not optional: a local directory installs as a `link:` symlink, and a bare name
+hits `already-installed`; removing first and then installing an exact version is what puts the
+registry's real directory in place.
+
+Then check three things: the profile's `package.json` names the version rather than `link:`,
+the installed package's own version matches, and `preset-qa` reports `fiberPhase: active`.
+An open session does not hot-switch — start a new one to run the new preset.
+
 ## Known limitations
 
 - **The mode name ignores the UI language**: `name: 问答模式` is a plain string carried by

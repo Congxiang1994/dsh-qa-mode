@@ -115,3 +115,13 @@ for src in "https://cdn.dsh.so/market/index.json" "https://dshopen.org/index.jso
 done
 
 echo "release: ${pkg}@${next} published and verified"
+
+# --- 7. local sync is still on you ----------------------------------------
+# Publishing does not update the copy this machine runs: the profile keeps the
+# version it installed until someone replaces it, so a successful release can
+# still leave the local app on the old preset. Naming it here is the last chance
+# to notice.
+echo "release: now sync the local profile:"
+echo "release:   plugin_manager remove_bundle  target: ${pkg}"
+echo "release:   plugin_manager install_bundle target: ${pkg}@${next}"
+echo "release: verify package.json says \"${next}\" (not link:), and preset-qa is active"

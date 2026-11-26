@@ -226,6 +226,21 @@ node scripts/verify-session.mjs --self-test
 
 索引都由各自的采集任务按 npm 重建，登记一次即可，之后每次发版不必重新提交。`www.dsh.so/api/submit` 的入口不接受外部提交（它要的是索引器内部完整 schema），不要照它的报错去凑字段。
 
+### 发完版还要同步本机
+
+发布不等于本机在跑新代码：profile 会一直用**它安装的那个版本**，npm 上更新了也不会自己换。所以每次影响行为的改动，发完版还要把本机换成新版本，否则调试的是旧逻辑。
+
+```
+plugin_manager  remove_bundle   target: dsh-qa-mode
+plugin_manager  install_bundle  target: dsh-qa-mode@<版本>
+```
+
+必须带版本号：`install_bundle` 指向本地目录会装成 `link:` 软链，指向裸包名会命中 `already-installed`；先 remove 再按精确版本装，才是 registry 上的真实目录。
+
+装完核对三件事：`~/.dsh/profiles/desktop/package.json` 里写的是版本号而不是 `link:`；`node_modules/dsh-qa-mode` 的 `package.json` 版本对得上；`preset-qa` 的 `fiberPhase` 是 `active`。
+
+已开着的会话不会热切换，要新开会话才会用上新 preset。
+
 ## 已知边界
 
 - **模式名不跟随界面语言**：`name: 问答模式` 是 preset 自带的字符串，不像内置四模式那样走 locale 字典。英文界面下也显示「问答模式」。
