@@ -146,7 +146,8 @@ dsh-qa-mode/
 ├── LICENSE               # MIT
 ├── scripts/
 │   ├── validate.mjs      # checks manifest + patch + locale + icon
-│   └── publish.sh        # release script, reads the token from ~/.dsh/.secrets
+│   ├── release.sh        # full release: bump -> check -> commit/tag/push -> npm -> verify -> mirror
+│   └── publish.sh        # npm only (no commit, no verification)
 └── .github/workflows/
     └── checks.yml        # runs the checks on push and PR
 ```
@@ -159,10 +160,47 @@ dsh-qa-mode/
 ```sh
 npm install
 npm run check     # validate manifest, patch row shape, preset children, locale, icon
-./scripts/publish.sh
 ```
 
 A failed check exits non-zero.
+
+## Releasing
+
+```sh
+./scripts/release.sh          # patch: 1.0.1 -> 1.0.2
+./scripts/release.sh minor    # minor
+./scripts/release.sh 1.2.0    # explicit version
+```
+
+One command runs the whole chain: bump the version, run `npm run check`, commit with a
+`v<version>` tag and push, `npm publish`, poll the registry until that version is
+downloadable and `latest` points at it, request an npmmirror sync and confirm it, then
+report the listing state of both plugin indexes.
+
+Every step that cannot be proven exits non-zero — **"it ran" is not "it shipped"**. Two
+known traps are handled in the script:
+
+- npm's `+ package@version` line does not mean the version is downloadable; the registry can
+  hold it back briefly. The script queries `registry.npmjs.org/<pkg>/<version>` directly and
+  compares `dist-tags.latest`.
+- npmmirror counts independently rather than proxying, so a fresh publish needs an explicit
+  `PUT /-/package/<pkg>/syncs` before the mirror serves it.
+
+Every npm call in `scripts/release.sh` passes `--cache` (under `$TMPDIR`) because a sandboxed
+shell may present a read-only `~/.npm`, which makes npm fail before it reaches the network.
+
+### Where it is published
+
+| Source | How | State |
+|---|---|---|
+| [npm](https://www.npmjs.com/package/dsh-qa-mode) | `release.sh` | primary channel; `latest` is the shipped version |
+| [npmmirror](https://registry.npmmirror.com/dsh-qa-mode) | `release.sh` syncs it | China mirror |
+| [dsh.so](https://www.dsh.so/) market | submitted once; its index rebuilds from npm | entry submitted |
+| [dshopen.org](https://dshopen.org/) open market | filed once for listing; then follows npm | awaiting maintainer merge |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | one PR per entry; follows the repo once merged | PR #18920 open |
+
+Both indexes need registering only once: entries point at the npm package and the repository,
+so later releases are picked up by their own collection jobs.
 
 ## Known limitations
 

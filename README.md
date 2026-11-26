@@ -126,7 +126,8 @@ dsh-qa-mode/
 ├── LICENSE               # MIT
 ├── scripts/
 │   ├── validate.mjs      # 校验 manifest + patch + locale + icon
-│   └── publish.sh        # 发版脚本，从 ~/.dsh/.secrets 读 token
+│   ├── release.sh        # 一条命令发版：改版本 → 校验 → 提交打 tag 推送 → npm 发布 → 验活 → 同步镜像
+│   └── publish.sh        # 只发 npm（不提交、不验活），日常手动用
 └── .github/workflows/
     └── checks.yml        # push / PR 自动跑校验
 ```
@@ -138,10 +139,38 @@ dsh-qa-mode/
 ```sh
 npm install
 npm run check     # 校验 manifest、patch 行结构、preset 子插件、locale、icon
-./scripts/publish.sh
 ```
 
 校验失败会非 0 退出。
+
+## 发布
+
+```sh
+./scripts/release.sh          # 补丁版本：1.0.1 → 1.0.2
+./scripts/release.sh minor    # 次版本
+./scripts/release.sh 1.2.0    # 指定版本
+```
+
+一条命令跑完整条链：bump 版本 → `npm run check` → commit + `v<版本>` tag + push → npm publish → 轮询 registry 直到该版本可下载且 `latest` 指向它 → 请求 npmmirror 同步并确认 → 打印两个插件索引的收录状态。
+
+任何一步无法证明成功就非 0 退出——**"跑过了"不等于"发出去了"**。两个已知坑都写进脚本了：
+
+- npm 发布返回的 `+ 包名@版本` 不代表能下载，registry 可能短期保留；脚本直接查 `registry.npmjs.org/<pkg>/<version>` 并核对 `dist-tags.latest`。
+- npmmirror 是独立计数的一路，不是代理，必须显式 `PUT /-/package/<pkg>/syncs` 才会同步。
+
+`scripts/release.sh` 里的 npm 调用一律带 `--cache`（默认放 `$TMPDIR`），因为沙箱里 `~/.npm` 可能只读，npm 会在联网前就失败。
+
+### 发布到哪些插件源
+
+| 源 | 方式 | 状态 |
+|---|---|---|
+| [npm](https://www.npmjs.com/package/dsh-qa-mode) | `release.sh` 自动 | 主渠道，`latest` 即最新版 |
+| [npmmirror](https://registry.npmmirror.com/dsh-qa-mode) | `release.sh` 自动同步 | 国内镜像 |
+| [dsh.so](https://www.dsh.so/) 插件市场 | 首次已提交；索引按 npm 自动重建 | 已提交条目 |
+| [开放插件市场 dshopen.org](https://dshopen.org/) | 首次已挂 issue 收录；之后跟随 npm | 待维护者合并 |
+| [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | 每个新条目一个 PR；已合入后跟随仓库 | 已提 PR #18920 |
+
+两个索引源都只登记一次：条目指到 npm 包名 / 仓库，之后每次发版由它们自己的采集任务重建，不需要重新提交。
 
 ## 已知边界
 

@@ -1,9 +1,13 @@
 {
   "name": "dsh-qa-mode",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Q&A agent preset for DeepSeek Harness: answers with web search and page fetches instead of a coding toolchain.",
   "type": "module",
   "license": "MIT",
+  "author": {
+    "name": "Congxiang1994",
+    "url": "https://github.com/Congxiang1994"
+  },
   "keywords": [
     "dsh",
     "dsh-plugin",
