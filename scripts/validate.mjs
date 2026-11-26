@@ -108,42 +108,56 @@ check(statSync(icon, { throwIfNoEntry: false })?.isFile() === true, 'icon.svg mu
 check(statSync(icon, { throwIfNoEntry: false })?.size < 256 * 1024, 'icon.svg must stay under 256 KiB')
 check(readFileSync(icon, 'utf8').includes('<svg'), 'icon.svg must be an SVG document')
 
-/* Both READMEs must exist and cross-link each other, and the Chinese one must
-   quote the persona prompt exactly as the patch ships it. A drifting quote or a
-   one-sided language link is otherwise invisible until a reader notices. The
-   English README carries a translation of that prompt, so it is checked for a
-   fenced quote but not for byte equality with the Chinese source. */
-const readmes = {
-  'README.md': { other: 'README.en.md', quotesSource: true },
-  'README.en.md': { other: 'README.md', quotesSource: false },
-}
-for (const [file, expected] of Object.entries(readmes)) {
+/* Both main READMEs must exist and cross-link each other. They now carry only
+   highlights and navigation, so a missing language link is otherwise invisible
+   until a reader clicks a dead end. */
+for (const [file, other] of [['README.md', 'README.en.md'], ['README.en.md', 'README.md']]) {
   const path = join(root, file)
   check(statSync(path, { throwIfNoEntry: false })?.isFile() === true, `${file} must exist`)
   if (statSync(path, { throwIfNoEntry: false })?.isFile() !== true) continue
   const text = readFileSync(path, 'utf8')
   check(
-    text.includes(`href="${expected.other}"`) || text.includes(`](${expected.other})`),
-    `${file} must link to ${expected.other}`,
+    text.includes(`href="${other}"`) || text.includes(`](${other})`),
+    `${file} must link to ${other}`,
   )
-  check(text.length > 1500, `${file} looks too short to document the plugin`)
+  check(text.length > 1000, `${file} looks too short to be the main README`)
 }
 
+/* The details now live in paired topic docs. A missing file or a missing
+   language twin is a broken navigation link from the main README, so check all
+   ten explicitly rather than trusting the links to resolve. */
+const splitDocs = ['architecture', 'technical', 'release', 'development', 'repository']
+  .flatMap(name => [`docs/${name}.md`, `docs/${name}.en.md`])
+for (const file of splitDocs) {
+  const path = join(root, file)
+  const isFile = statSync(path, { throwIfNoEntry: false })?.isFile() === true
+  check(isFile, `${file} must exist (split documentation)`)
+  if (isFile) check(readFileSync(path, 'utf8').length > 500, `${file} looks too short to be a real doc`)
+}
+
+/* The Chinese architecture doc quotes the persona prompt exactly as the patch
+   ships it; the English one carries a fenced translation. The main READMEs
+   intentionally quote neither, so the verbatim check follows the prompt to its
+   new home. A drifting quote is otherwise invisible until a reader notices. */
 const personaSource = readFileSync(join(root, 'cordis.patch.yml'), 'utf8')
 const personaMatch = personaSource.match(/prefix: \|\n((?: {16}.*\n| *\n)+)/)
 check(personaMatch !== null, 'cordis.patch.yml must declare the persona prompt as a block scalar')
 if (personaMatch !== null) {
   const normalize = value => value.split('\n').map(line => line.trim()).filter(Boolean).join('\n')
   const expected = normalize(personaMatch[1].replace(/^ {16}/gm, ''))
-  for (const [file, { quotesSource }] of Object.entries(readmes)) {
-    const fenced = [...readFileSync(join(root, file), 'utf8').matchAll(/```[a-z]*\n([\s\S]*?)```/g)]
-      .map(match => match[1])
-      .find(block => block.includes('问答助手') || block.includes('Answer first'))
-    check(fenced !== undefined, `${file} must quote the persona prompt in a fenced block`)
-    if (fenced !== undefined && quotesSource) {
-      check(normalize(fenced) === expected, `${file} quotes a persona prompt that differs from cordis.patch.yml`)
-    }
+  const zhDoc = readFileSync(join(root, 'docs/architecture.md'), 'utf8')
+  const fencedZh = [...zhDoc.matchAll(/```[a-z]*\n([\s\S]*?)```/g)]
+    .map(match => match[1])
+    .find(block => block.includes('问答助手'))
+  check(fencedZh !== undefined, 'docs/architecture.md must quote the persona prompt in a fenced block')
+  if (fencedZh !== undefined) {
+    check(normalize(fencedZh) === expected, 'docs/architecture.md quotes a persona prompt that differs from cordis.patch.yml')
   }
+  const enDoc = readFileSync(join(root, 'docs/architecture.en.md'), 'utf8')
+  const fencedEn = [...enDoc.matchAll(/```[a-z]*\n([\s\S]*?)```/g)]
+    .map(match => match[1])
+    .find(block => block.includes('Answer first'))
+  check(fencedEn !== undefined, 'docs/architecture.en.md must quote the English persona prompt in a fenced block')
 }
 
 /* The persona is the complete system prompt, so any rule missing from it is
