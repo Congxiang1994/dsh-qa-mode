@@ -106,13 +106,10 @@ done
 echo "release: npmmirror checked"
 
 # --- 6. index sources ------------------------------------------------------
-# Both market indexes rebuild from npm on their own, so a release needs no
-# further submission. Print the listing state so a missing entry is visible.
-for src in "https://cdn.dsh.so/market/index.json" "https://dshopen.org/index.json"; do
-  state=$(curl -fsS --max-time 60 "${src}" 2>/dev/null \
-    | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{const d=JSON.parse(s);const hit=(d.plugins||[]).find(p=>p.name===process.argv[1]);if(!hit)return console.log("absent");const v=(hit.versions||[])[0];console.log("listed@"+(v?v.version:"?"))}catch{console.log("unreadable")}})' "${pkg}" 2>/dev/null || echo "unreachable")
-  echo "release: ${src%/*} -> ${state}"
-done
+# Five user-designated indexes. dsh.so rebuilds from npm on its own; dshopen/
+# dshfind/xivie-a were registered once by issue/PR and then follow npm. This
+# step verifies all five rather than assuming registration means listed.
+node scripts/check-indexes.mjs || echo "release: index check found absent/outdated sources (see above; npm latest is the release gate)"
 
 echo "release: ${pkg}@${next} published and verified"
 

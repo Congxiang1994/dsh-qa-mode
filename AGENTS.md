@@ -61,7 +61,27 @@ install_bundle target: dsh-qa-mode@<刚发布的版本>
   `configured web provider is not registered`。
 - 保留 `package.json` 的 `author` 字段：插件市场靠它显示作者。
 
-## 插件源（都只需登记一次，之后跟随 npm 自动重建）
+## ⭐ 五个索引源：每次发版都要发布/复核（用户 2026-11-26 明确要求）
+
+用户点名的五个索引源，**每次版本更新都要确保发布/登记到位**，不是"只需登记一次"。
+
+| # | 索引 | 收录机制 | 每次发版要做什么 |
+|---|---|---|---|
+| 1 | `https://cdn.dsh.so/market/index.json` | dsh.so 官方索引器从 npm 自动重建；`www.dsh.so/api/submit` 只收内部完整 schema，外部调不通 | 等重建 + 复核 npm 版本；查不到若因索引器阈值/延迟，记入汇报，不当失败 |
+| 2 | `https://cdn.dsh.so/market/top-rank.json` | 官方榜单子集（16065 个插件里的一小部分） | 复核即可；没进榜不代表发布失败 |
+| 3 | `https://dshopen.org/index.json` | `polang233/dsh-plugin-index` issue + npm 自动重建 | 已登记（#804）；每次发版复核条目在、版本跟随 latest |
+| 4 | `https://api.dshfind.com/market/dsh-index.json` | 每日从 GitHub `dsh-plugin` topic 同步；topic 搜索超 1000 上限会截断漏仓 | 已提 PR 把仓库加进其 `MANUAL_REPOS`（hikariming/dshfind#96）；每次发版复核条目在、npm 版本对得上 |
+| 5 | `https://xivie-a.github.io/dsh-market/index.json` | 人工审核，issue 申请收录，每 6 小时重建 | 已提收录 issue（xivie-a/dsh-market#1）；每次发版复核条目在、版本跟随 latest |
+
+**复核脚本**（发版后跑，验证五个源是否都收录、版本是否跟上 npm latest）：
+```sh
+node scripts/check-indexes.mjs              # 逐行打印五个源状态（absent 是正常可出现状态）
+node scripts/check-indexes.mjs --strict     # 任一源 absent / 滞后即非 0，适合发版流程
+node scripts/check-indexes.mjs --self-test  # 注入式验证判定逻辑，不联网
+```
+判定标准：五个源逐一报出 `listed@<版本>` 或 `absent`；`absent` 时判断是"未登记"（源 3/4/5：去补 issue/PR）还是"索引器阈值/延迟"（源 1/2：记录并等待）。**发布是否成功只看 npm `dist-tags.latest`，索引滞后不算失败。**
+
+## 插件源（历史登记方式，供复核时参考）
 
 | 源 | 方式 |
 |---|---|
@@ -69,6 +89,8 @@ install_bundle target: dsh-qa-mode@<刚发布的版本>
 | npmmirror | `release.sh` 自动同步 |
 | [dsh.so](https://www.dsh.so/) | 索引按 npm 自动重建，**无需提交**。`www.dsh.so/api/submit` 只收索引器内部完整 schema（`id`/`license`/`status`/`verifiedVersions`/`stars`…），外部调不通，不要照着报错凑字段 |
 | [dshopen.org](https://dshopen.org/) | 在 `polang233/dsh-plugin-index` 开 issue（用 `plugin-add.yml` 模板）；已开 #804，等维护者 |
+| [dshfind](https://dshfind.com/) | topic 抓漏时用 PR 把仓库加进 `scripts/sync-plugins-db.mjs` 的 `MANUAL_REPOS`；已开 hikariming/dshfind#96 |
+| [xivie-a/dsh-market](https://xivie-a.github.io/dsh-market/index.json) | 用 `plugin-submit.yml` 模板提 issue；已开 xivie-a/dsh-market#1 |
 | [awesome-dsh-plugin](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin) | PR 只加一个 `data/plugins/Congxiang1994__dsh-qa-mode.yml`；不要改 README（由脚本生成）；已开 #18920，等合并 |
 
 索引收录有延迟：刚发完版查 `cdn.dsh.so/market/index.json` 查不到是正常的，不要据此判断失败。
