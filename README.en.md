@@ -19,7 +19,28 @@
 
 ---
 
+## 🤔 What is this
+
+Sometimes you just want to **ask a question** — look something up, verify a fact, understand a concept — and you don't need the AI to edit code, run commands, or spin up subagents. In the default mode, though, all those development tools sit in the context anyway, making every request heavier and slower.
+
+`dsh-qa-mode` adds a **Q&A mode** to DeepSeek Harness: it strips out the development tools and keeps only **web search, page fetching, and read-only file access**, so the AI focuses on answering. Pick it in the mode picker, ask your question, and move on — your code stays untouched.
+
+<details>
+<summary><strong>📌 In one line &amp; key numbers</strong> (expand for the technical summary and docs index)</summary>
+
 > **In one line**: a Q&A mode for DSH — only web search, fetch and read-only file tools. The request drops from **44 tools / 42 KB of schemas** to **8 tools / 2 KB**, and the system prompt from **6.1 K to 1.2 K characters**. Switch with one click in the mode picker; ask, then move on.
+>
+> Want to dig deeper? Design trade-offs, implementation details and engineering workflows are split by topic — read what you need:
+>
+> | Want to know | Document |
+> |---|---|
+> | What the mode looks like, the rows it mounts, where search comes from, the prompt, limitations | [Architecture](docs/architecture.en.md) |
+> | How request size is cut, how concurrency works, how to trim search tools further | [Technical design](docs/technical.en.md) |
+> | One-command release, the five indexes, syncing this machine afterwards | [Releasing](docs/release.en.md) |
+> | Validation, behavioural checks, development commands | [Development](docs/development.en.md) |
+> | Directory tree and what each file does | [Repository layout](docs/repository.en.md) |
+
+</details>
 
 ## ⚡ Highlights
 
@@ -43,18 +64,6 @@ dsh plugin --profile <your-profile> add dsh-qa-mode
 Open a **new** session and pick 「问答模式」 in the mode picker.
 
 > Sessions that are already open do not switch — a session's plugin composition is fixed when it starts. Remove with `dsh plugin --profile <your-profile> remove dsh-qa-mode`.
-
-## 📚 Documentation
-
-> This file covers highlights only. Design trade-offs, implementation details and engineering workflows are split by topic — read what you need.
-
-| Want to know | Document |
-|---|---|
-| What the mode looks like, the rows it mounts, where search comes from, the prompt, limitations | [Architecture](docs/architecture.en.md) |
-| How request size is cut, how concurrency works, how to trim search tools further | [Technical design](docs/technical.en.md) |
-| One-command release, the five indexes, syncing this machine afterwards | [Releasing](docs/release.en.md) |
-| Validation, behavioural checks, development commands | [Development](docs/development.en.md) |
-| Directory tree and what each file does | [Repository layout](docs/repository.en.md) |
 
 ## ⭐ Find it useful? Give it a star
 
